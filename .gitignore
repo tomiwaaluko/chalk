@@ -19,3 +19,10 @@ DEMO_SCRIPT.md
 DEMO_SCRIPT_ELEVENLABS.md
 .codex-tmp/
 .tmp/
+.tmp_pytest/
+.tmp_pytest_run/
+.tmp_pytest_run2/
+tmp_pytest_run3/
+*.log
+*.db
+*.pdf
