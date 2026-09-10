@@ -11,7 +11,37 @@ Never mark a task done unless tests pass and the acceptance criteria in the phas
 
 **Active Phase:** Phase 9 - AI Injury Agent
 **Current Task:** ESPN/Gemini injury ingestion pipeline and dashboard injury status defaults
-**Last Updated:** Session 11
+**Last Updated:** Session 12
+
+---
+
+## Dashboard redesign — landing page + board (2026-09-10)
+
+Branch `claude/landing-page-redesign-4ubp92`. Applied the refero-design
+methodology; Refero MCP was unavailable, so the direction was locked against the
+skill's bundled craft references and validated against rendered screenshots.
+
+- **What & why:** both surfaces read as generic AI-generated marketing — gradient
+  headline, blur blob, symmetric card grid, and a "dashboard preview" built from
+  grey rectangles. Rebuilt on a market-terminal direction with purpose-named
+  tokens and one signature graphic (the projection rail) shared by both surfaces.
+- **Files:** `dashboard/src/index.css`, `index.html`, `src/main.tsx`,
+  `src/App.tsx`, `src/pages/LandingPage.tsx`, new `src/components/Rail/*` and
+  `src/components/marketing/*`, plus rewrites of `PlayerCard`, `StatDistribution`,
+  `GameCard`, `GameDetailView`, `PropsBoard`, `FantasyBoard`, `InjuryBadge`.
+- **Status:** complete. `tsc`, `eslint` and `vite build` clean; Playwright pass at
+  desktop and mobile with no console errors and no horizontal overflow.
+- **Issues found and fixed along the way:**
+  - `Inter` was declared in CSS but never loaded — the UI had been rendering in
+    `system-ui`. Now self-hosted via `@fontsource-variable`.
+  - The props board's "Model" column rendered `line` twice (the source comment
+    admitted it). Now compares model vs. book-implied probability.
+  - The landing page claimed "Vegas-beating accuracy" and "beating Vegas on 4/4
+    stats"; the repo's own numbers do not support it (points MAE 4.906 vs a ~4.5
+    baseline). Copy now states the gap.
+  - The footer credited XGBoost; production has used LightGBM since Phase 8.
+- **Deferred:** real book lines in `PlayerCard` (blocked on the stubbed odds
+  fetcher); no committed visual-regression baseline.
 
 ---
 

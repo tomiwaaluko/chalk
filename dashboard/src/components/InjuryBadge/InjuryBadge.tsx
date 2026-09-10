@@ -2,21 +2,31 @@ interface InjuryBadgeProps {
   status?: string | null;
 }
 
-const statusStyles: Record<string, string> = {
-  active: "bg-value-green/20 text-value-green",
-  questionable: "bg-yellow-500/20 text-yellow-400",
-  doubtful: "bg-chalk-orange/20 text-chalk-orange-light",
-  out: "bg-fade-red/20 text-fade-red",
+/** Availability. The only place these colours mean "health" rather than "edge". */
+const STATUS_STYLES: Record<string, string> = {
+  questionable: "border-caution/30 bg-caution/10 text-caution",
+  doubtful: "border-caution/40 bg-caution/15 text-caution",
+  out: "border-edge-down/30 bg-edge-down/10 text-edge-down",
 };
 
+/**
+ * Renders nothing for an available player.
+ *
+ * Most players on a slate are active, so a badge on every card is noise that
+ * trains the eye to skip the row where it finally matters. No badge means
+ * available; a badge always means something changed.
+ */
 export function InjuryBadge({ status }: InjuryBadgeProps) {
   const normalized = status?.trim() || "Active";
-  const style = statusStyles[normalized.toLowerCase()] ?? statusStyles.active;
-  const label = normalized.charAt(0).toUpperCase() + normalized.slice(1).toLowerCase();
+  const style = STATUS_STYLES[normalized.toLowerCase()];
+
+  if (!style) return null;
 
   return (
-    <span className={`inline-block px-2 py-0.5 rounded text-xs font-semibold uppercase tracking-wide ${style}`}>
-      {label}
+    <span
+      className={`label inline-flex items-center rounded border px-1.5 py-1 ${style}`}
+    >
+      {normalized}
     </span>
   );
 }

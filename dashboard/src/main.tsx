@@ -7,8 +7,10 @@ const App = lazy(() => import('./App'))
 const LandingPage = lazy(() => import('./pages/LandingPage'))
 
 const loadingFallback = (
-  <div className="min-h-screen bg-navy-900 flex items-center justify-center">
-    <span className="text-xl font-black text-chalk-orange">CHALK</span>
+  <div className="flex min-h-screen items-center justify-center bg-canvas">
+    {/* The chalk tick, holding the space until the app arrives. */}
+    <span className="sr-only">Loading Chalk</span>
+    <span className="h-6 w-[3px] animate-pulse rounded-full bg-chalk" />
   </div>
 )
 

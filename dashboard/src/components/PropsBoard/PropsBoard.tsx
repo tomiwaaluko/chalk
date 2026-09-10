@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Star } from "lucide-react";
 import type { OverUnderLine } from "../../types/chalk";
 
 interface PropsBoardProps {
@@ -16,6 +15,9 @@ const STAT_LABELS: Record<string, string> = {
 type FilterStat = "all" | string;
 type FilterConf = "all" | "high" | "medium" | "low";
 
+/** An edge this size is worth surfacing above the rest of the board. */
+const STRONG_EDGE = 0.08;
+
 export function PropsBoard({ props }: PropsBoardProps) {
   const [statFilter, setStatFilter] = useState<FilterStat>("all");
   const [confFilter, setConfFilter] = useState<FilterConf>("all");
@@ -27,14 +29,20 @@ export function PropsBoard({ props }: PropsBoardProps) {
 
   const uniqueStats = [...new Set(props.map((p) => p.stat))];
 
+  if (props.length === 0) {
+    return (
+      <EmptyState
+        title="No book lines for this game yet"
+        body="Props appear once sportsbook lines have been ingested for the slate. Player projections are on the Players tab in the meantime."
+      />
+    );
+  }
+
   return (
     <div>
-      {/* Filters — wrap on mobile */}
-      <div className="flex flex-wrap gap-2 mb-3">
-        <FilterBtn
-          active={statFilter === "all"}
-          onClick={() => setStatFilter("all")}
-        >
+      <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-2">
+        <span className="label mr-1 text-subtle">Stat</span>
+        <FilterBtn active={statFilter === "all"} onClick={() => setStatFilter("all")}>
           All
         </FilterBtn>
         {uniqueStats.map((s) => (
@@ -46,11 +54,11 @@ export function PropsBoard({ props }: PropsBoardProps) {
             {STAT_LABELS[s] ?? s}
           </FilterBtn>
         ))}
-        <span className="mx-2 border-l border-navy-600" />
-        <FilterBtn
-          active={confFilter === "all"}
-          onClick={() => setConfFilter("all")}
-        >
+
+        <span className="mx-2 hidden h-4 w-px bg-hairline sm:block" />
+
+        <span className="label mr-1 text-subtle">Confidence</span>
+        <FilterBtn active={confFilter === "all"} onClick={() => setConfFilter("all")}>
           Any
         </FilterBtn>
         {(["high", "medium", "low"] as const).map((c) => (
@@ -64,55 +72,63 @@ export function PropsBoard({ props }: PropsBoardProps) {
         ))}
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[620px] max-w-[980px] border-collapse text-left">
+          <colgroup>
+            <col className="w-[32%]" />
+            <col className="w-[10%]" />
+            <col className="w-[12%]" />
+            <col className="w-[14%]" />
+            <col className="w-[14%]" />
+            <col className="w-[18%]" />
+          </colgroup>
           <thead>
-            <tr className="text-xs text-neutral-400 uppercase border-b border-navy-600">
-              <th className="text-left py-2 px-2">Player</th>
-              <th className="text-left py-2 px-1">Stat</th>
-              <th className="text-right py-2 px-1">Line</th>
-              <th className="text-right py-2 px-1">Model</th>
-              <th className="text-right py-2 px-1">Over%</th>
-              <th className="text-right py-2 px-2">Edge</th>
+            <tr className="border-b border-hairline-strong text-subtle">
+              <th className="label py-2.5 pr-4 font-semibold">Player</th>
+              <th className="label py-2.5 pr-4 font-semibold">Stat</th>
+              <th className="label py-2.5 pr-4 text-right font-semibold">Line</th>
+              <th className="label py-2.5 pr-4 text-right font-semibold">Model</th>
+              <th className="label py-2.5 pr-4 text-right font-semibold">Implied</th>
+              <th className="label py-2.5 text-right font-semibold">Edge</th>
             </tr>
           </thead>
           <tbody>
             {filtered.map((p, i) => {
-              const isHighEdge = Math.abs(p.edge) >= 0.08;
-              const rowBg =
-                p.edge > 0.06
-                  ? "bg-value-green/8"
-                  : p.edge < -0.06
-                    ? "bg-fade-red/8"
-                    : "";
-
+              const strong = Math.abs(p.edge) >= STRONG_EDGE;
               return (
                 <tr
                   key={`${p.player_id}-${p.stat}-${i}`}
-                  className={`border-b border-navy-700 hover:bg-navy-700/50 ${rowBg}`}
+                  className="border-b border-hairline transition-colors duration-[120ms] last:border-b-0 hover:bg-surface"
                 >
-                  <td className="py-1.5 px-2 font-medium text-neutral-200">
-                    {isHighEdge && (
-                      <Star size={12} className="inline mr-1 text-yellow-400 fill-yellow-400" />
-                    )}
-                    {p.player_name || String(p.player_id)}
+                  <td className="py-2.5 pr-4">
+                    <span className="flex items-center gap-2">
+                      {/* Marks the handful of lines worth acting on. */}
+                      <span
+                        aria-hidden
+                        className={`h-1.5 w-1.5 shrink-0 rounded-full ${
+                          strong ? "bg-chalk" : "bg-transparent"
+                        }`}
+                      />
+                      <span className="text-[0.875rem] text-ink">
+                        {p.player_name || String(p.player_id)}
+                      </span>
+                      {strong && <span className="sr-only">Strong edge</span>}
+                    </span>
                   </td>
-                  <td className="py-1.5 px-1 text-neutral-400">
+                  <td className="num py-2.5 pr-4 text-[0.75rem] tracking-[0.06em] text-muted">
                     {STAT_LABELS[p.stat] ?? p.stat}
                   </td>
-                  <td className="py-1.5 px-1 text-right text-neutral-300">
+                  <td className="num py-2.5 pr-4 text-right text-[0.875rem] text-muted">
                     {p.line.toFixed(1)}
                   </td>
-                  <td className="py-1.5 px-1 text-right font-semibold text-neutral-200">
-                    {/* Model's implied line is roughly the over_probability mapped back */}
-                    {p.line.toFixed(1)}
-                  </td>
-                  <td className="py-1.5 px-1 text-right text-neutral-300">
+                  <td className="num py-2.5 pr-4 text-right text-[0.875rem] font-semibold text-ink">
                     {(p.over_probability * 100).toFixed(0)}%
                   </td>
-                  <td className="py-1.5 px-2 text-right font-bold">
-                    <EdgeBadge edge={p.edge} />
+                  <td className="num py-2.5 pr-4 text-right text-[0.875rem] text-muted">
+                    {(p.implied_over_prob * 100).toFixed(0)}%
+                  </td>
+                  <td className="py-2.5 text-right align-middle">
+                    <EdgeCell edge={p.edge} />
                   </td>
                 </tr>
               );
@@ -122,10 +138,22 @@ export function PropsBoard({ props }: PropsBoardProps) {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center text-neutral-400 py-6 text-sm">
-          No props match the current filters
-        </div>
+        <EmptyState
+          title="Nothing matches those filters"
+          body="Widen the stat or confidence filter to see the rest of the board."
+        />
       )}
+    </div>
+  );
+}
+
+function EmptyState({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-md border border-dashed border-hairline px-6 py-10 text-center">
+      <p className="text-[0.9375rem] font-medium text-muted">{title}</p>
+      <p className="lede mx-auto mt-2 max-w-[46ch] text-[0.8125rem] leading-relaxed text-subtle">
+        {body}
+      </p>
     </div>
   );
 }
@@ -141,11 +169,13 @@ function FilterBtn({
 }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`px-2 py-0.5 rounded text-xs font-medium transition-colors cursor-pointer ${
+      aria-pressed={active}
+      className={`cursor-pointer rounded px-2 py-1 text-[0.75rem] font-medium capitalize transition-colors duration-[120ms] ${
         active
-          ? "bg-chalk-orange text-white"
-          : "bg-navy-700 text-neutral-400 hover:text-neutral-200"
+          ? "bg-surface text-ink"
+          : "text-subtle hover:bg-surface/60 hover:text-muted"
       }`}
     >
       {children}
@@ -153,15 +183,27 @@ function FilterBtn({
   );
 }
 
-function EdgeBadge({ edge }: { edge: number }) {
-  const pct = (edge * 100).toFixed(1);
-  const sign = edge > 0 ? "+" : "";
-  const color =
-    edge > 0.04
-      ? "text-value-green"
-      : edge < -0.04
-        ? "text-fade-red"
-        : "text-neutral-400";
+/** Model probability minus the book's vig-adjusted implied probability. */
+function EdgeCell({ edge }: { edge: number }) {
+  const pct = Math.abs(edge * 100).toFixed(1);
+  const meaningful = Math.abs(edge) > 0.04;
+  const tone = !meaningful
+    ? "text-subtle"
+    : edge > 0
+      ? "text-edge-up"
+      : "text-edge-down";
 
-  return <span className={color}>{sign}{pct}%</span>;
+  return (
+    <span className={`inline-flex items-baseline gap-2 ${tone}`}>
+      <span className="num text-[0.875rem] font-semibold">
+        {edge > 0 ? "+" : "−"}
+        {pct}%
+      </span>
+      {/* Fixed width keeps every row the same height whether or not the
+          lean is worth naming. */}
+      <span className="label w-12 shrink-0 text-left opacity-80">
+        {meaningful ? (edge > 0 ? "over" : "under") : ""}
+      </span>
+    </span>
+  );
 }

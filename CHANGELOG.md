@@ -1,5 +1,60 @@
 # Changelog
 
+## 2026-09-10 — Landing page + board redesign (refero-design)
+
+### Done
+- Redesigned both dashboard surfaces (`/` and `/dashboard`) on a market-terminal
+  direction: hairline rules instead of card chrome, tabular monospaced figures,
+  uppercase micro-labels, one accent used sparingly.
+- New shared primitive `components/Rail/ProjectionRail.tsx` — the p10/p25/median/
+  p75/p90 distribution rail with the sportsbook line marked. Renders at hero
+  scale on the landing page and at row scale inside player cards, so the graphic
+  a visitor learns is the one they use on the board.
+- Replaced the ad-hoc hex values with purpose-named tokens in `src/index.css`
+  (canvas/sunken/surface/hairline/ink/muted/subtle/chalk/edge-up/edge-down).
+  Token roles are documented in the stylesheet and must not drift.
+- Self-hosted Inter + JetBrains Mono via `@fontsource-variable`. `Inter` was
+  previously declared in CSS but never loaded, so the UI had been falling back
+  to `system-ui`.
+- Landing page rewritten: full-bleed hero rail, proof strip, "read the rail"
+  explainer, four-stage method sequence, accuracy table, real board preview.
+  Removed the gradient headline, the blur blob, the three-card feature grid, the
+  grey-rectangle fake mockup and the dead "See How It Works" button.
+- Board: equal-height player cards, accessible tablist with arrow-key nav,
+  availability badge now shown only when a player is *not* active, honest
+  empty states, `:focus-visible` rings throughout.
+- **Copy corrections.** Dropped the unsupported "Vegas-beating accuracy" /
+  "beating Vegas on 4/4 stats" claims — points MAE is 4.906 against a ~4.5
+  closing-line baseline, and lower is better. Footer credited XGBoost; the
+  production pipeline has used LightGBM since Phase 8.
+- Props board: removed a duplicated "Model" column that rendered `line` twice;
+  it now compares model over-probability against the book's implied probability.
+- Design record with the reference lock and decision ledger:
+  `docs/design/landing-and-board-redesign.md`.
+
+### Metrics
+- `tsc -b`, `eslint`, `vite build`: all clean.
+- Playwright pass at 1440x900 and 390x844 against stubbed `/v1` fixtures:
+  0 console errors, 0 page errors, 0px horizontal overflow at both widths.
+- Contrast on canvas: ink 15.6:1, muted 7.0:1, subtle 5.3:1, accent 5.0:1,
+  CTA text on orange 4.97:1 (was 3.7:1 with white).
+- Landing bundle 140.2 kB / 45.2 kB gzipped; CSS 34.6 kB / 9.2 kB gzipped.
+
+### Pending
+- Odds fetcher is still stubbed, so the props board has no real book lines in
+  production. The landing hero rail is labelled "sample projection" for that
+  reason.
+- Team-total MAE (15.4 vs a target of 8.0) is published on the accuracy table as
+  "not yet" and stays there until Phase 8 closes it.
+- No visual-regression baseline is committed; the Playwright harness used for
+  review lives outside the repo.
+
+### Next
+- Wire real sportsbook lines into `PlayerCard` so the rail can show the book
+  marker in the product, not only on the landing page.
+- Consider promoting the screenshot harness into `dashboard/` as a checked-in
+  visual smoke test.
+
 ## 2026-07-06 (later) — CHA-8: API error-response hardening
 
 ### Done
