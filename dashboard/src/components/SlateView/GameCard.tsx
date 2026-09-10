@@ -18,31 +18,40 @@ export function GameCard({
 }: GameCardProps) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`w-full text-left p-3 rounded-lg border transition-colors cursor-pointer ${
+      aria-current={selected ? "true" : undefined}
+      className={`group relative w-full cursor-pointer rounded-md border px-3 py-2.5 text-left transition-colors duration-[120ms] ${
         selected
-          ? "bg-navy-700 border-chalk-orange"
-          : "bg-navy-800 border-navy-600 hover:border-neutral-400"
+          ? "border-hairline-strong bg-surface"
+          : "border-hairline bg-transparent hover:border-hairline-strong hover:bg-surface/60"
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <div className="whitespace-nowrap">
-          <span className="text-sm font-bold text-neutral-200">{awayTeam}</span>
-          <span className="text-xs text-neutral-400 mx-1.5">@</span>
-          <span className="text-sm font-bold text-neutral-200">{homeTeam}</span>
-        </div>
+      {/* Selection is the one thing a side mark is allowed to mean. */}
+      <span
+        aria-hidden
+        className={`absolute left-0 top-2.5 bottom-2.5 w-[3px] rounded-full transition-colors duration-[120ms] ${
+          selected ? "bg-chalk" : "bg-transparent"
+        }`}
+      />
+
+      <div className="flex items-baseline justify-between gap-2 pl-2">
+        <span className="num whitespace-nowrap text-[0.8125rem] tracking-[0.02em]">
+          <span className={selected ? "text-ink" : "text-muted"}>{awayTeam}</span>
+          <span className="mx-1.5 text-subtle">@</span>
+          <span className={selected ? "text-ink" : "text-muted"}>{homeTeam}</span>
+        </span>
+
         {predictedTotal !== undefined && (
-          <div className="text-right shrink-0">
-            <div className="text-xs text-neutral-400">O/U</div>
-            <div className="text-sm font-bold text-chalk-orange">
-              {predictedTotal.toFixed(1)}
-            </div>
-          </div>
+          <span className="num shrink-0 text-[0.8125rem] font-semibold text-ink">
+            {predictedTotal.toFixed(1)}
+          </span>
         )}
       </div>
+
       {playerCount !== undefined && playerCount > 0 && (
-        <div className="text-xs text-neutral-400 mt-1">
-          {playerCount} players projected
+        <div className="num mt-1 pl-2 text-[0.6875rem] tracking-[0.04em] text-subtle">
+          {playerCount} projected
         </div>
       )}
     </button>

@@ -1,27 +1,159 @@
+/* Self-hosted variable fonts — no third-party runtime dependency */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
 @import "tailwindcss";
 
+/* ──────────────────────────────────────────────────────────────
+   Chalk design tokens
+   Named by purpose, never by hue. Components read tokens only.
+
+   Role discipline (do not violate):
+   - `chalk` (orange) = brand mark, primary CTA, median marker. It is
+     never a section background, never body text, never a status.
+   - `edge-up` / `edge-down` = direction of model edge and player
+     availability. Never decorative.
+   - `mono` = numerals and identifiers. Never prose.
+   ────────────────────────────────────────────────────────────── */
+
 @theme {
-  --color-navy-900: #0F1624;
-  --color-navy-800: #141D2E;
-  --color-navy-700: #1A2538;
-  --color-navy-600: #243044;
-  --color-chalk-orange: #E8531A;
-  --color-chalk-orange-light: #F06D3A;
-  --color-value-green: #22C55E;
-  --color-fade-red: #EF4444;
-  --color-neutral-400: #94A3B8;
-  --color-neutral-300: #CBD5E1;
-  --color-neutral-200: #E2E8F0;
+  /* Surfaces — dark scale authored on its own, not inverted from light */
+  --color-canvas: #0f1624;
+  --color-sunken: #0a0f19;
+  --color-surface: #151e2e;
+  --color-raised: #1b2637;
+
+  /* Rules */
+  --color-hairline: #212d40;
+  --color-hairline-strong: #2e3d55;
+
+  /* Text — all four pass AA on canvas */
+  --color-ink: #e8edf5; /* 15.6:1 */
+  --color-muted: #93a1b8; /*  7.0:1 */
+  --color-subtle: #7b8aa3; /*  5.3:1 */
+
+  /* Brand accent */
+  --color-chalk: #e8531a; /*  5.0:1 on canvas */
+  --color-chalk-hot: #ff6b33;
+  --color-chalk-deep: #c9430f;
+
+  /* Semantics */
+  --color-edge-up: #22c55e; /*  8.1:1 */
+  --color-edge-down: #ef4444; /*  4.9:1 */
+  --color-caution: #f5a524;
+
+  /* Type */
+  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace, "SF Mono", "Menlo",
+    "Consolas", monospace;
+
+  /* Motion — duration by frequency, not by taste */
+  --ease-out-soft: cubic-bezier(0, 0, 0.2, 1);
+  --ease-emphasized: cubic-bezier(0.2, 0, 0, 1);
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Keep anchored sections clear of the fixed nav */
+  scroll-padding-top: 5rem;
 }
 
 body {
   margin: 0;
-  background-color: #0F1624;
-  color: #E2E8F0;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-synthesis-weight: none;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 #root {
   min-height: 100vh;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--color-chalk) 32%, transparent);
+  color: var(--color-ink);
+}
+
+/* Keyboard focus only — never removed, never shown on mouse press */
+:focus-visible {
+  outline: 2px solid var(--color-chalk-hot);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+/* Scrollbars that belong to the canvas rather than the OS */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-hairline-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-hairline-strong);
+  border: 3px solid var(--color-canvas);
+  border-radius: 999px;
+}
+
+/* ── Utilities ─────────────────────────────────────────────── */
+
+/* Every figure in the product. Fixed-width digits stop columns
+   from jittering as predictions refresh. */
+.num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  letter-spacing: -0.01em;
+}
+
+/* Micro-labels. Uppercase without tracking reads as cramped. */
+.label {
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 600;
+  font-size: 0.6875rem; /* 11px */
+  line-height: 1;
+}
+
+.display {
+  letter-spacing: -0.032em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.lede {
+  text-wrap: pretty;
+}
+
+/* The chalk line: a 1px dashed vertical marking a sportsbook number.
+   Used on the rail and nowhere else. */
+.book-line {
+  background-image: linear-gradient(
+    to bottom,
+    currentColor 0 4px,
+    transparent 4px 8px
+  );
+  background-size: 1px 8px;
+  background-repeat: repeat-y;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -7,10 +7,11 @@ interface PlayerCardProps {
   prediction: PlayerPrediction;
 }
 
+/** How tightly the quantile models agree across this player's key stats. */
 const CONFIDENCE_STYLES: Record<string, string> = {
-  high: "bg-value-green/20 text-value-green",
-  medium: "bg-yellow-500/20 text-yellow-400",
-  low: "bg-fade-red/20 text-fade-red",
+  high: "text-edge-up",
+  medium: "text-caution",
+  low: "text-edge-down",
 };
 
 const KEY_STATS = ["pts", "reb", "ast", "fg3m"];
@@ -27,64 +28,81 @@ export function PlayerCard({ prediction }: PlayerCardProps) {
 
   const keyPreds = predictions.filter((p) => KEY_STATS.includes(p.stat));
   const overallConfidence = getOverallConfidence(keyPreds);
+  const absent = injury_context.absent_teammates;
 
   return (
-    <div className="bg-navy-800 rounded-lg border border-navy-600 p-4 hover:border-chalk-orange/40 transition-colors">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <h3 className="text-sm font-bold text-neutral-200">{player_name || String(player_id)}</h3>
-          <span className="text-xs text-neutral-400">vs {opponent_team}</span>
+    <article className="flex h-full flex-col rounded-md border border-hairline bg-surface transition-colors duration-[120ms] hover:border-hairline-strong">
+      <header className="flex items-start justify-between gap-3 border-b border-hairline px-4 py-3">
+        <div className="min-w-0">
+          <h3 className="truncate text-[0.9375rem] font-semibold text-ink">
+            {player_name || String(player_id)}
+          </h3>
+          <p className="num mt-0.5 text-[0.6875rem] tracking-[0.04em] text-subtle">
+            vs {opponent_team}
+          </p>
+          {/* An available player shows no badge, so state it for screen readers. */}
+          <span className="sr-only">
+            Status: {injury_context.player_status || "Active"}
+          </span>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex shrink-0 items-center gap-2">
           <InjuryBadge status={injury_context.player_status} />
           <span
-            className={`px-2 py-0.5 rounded text-xs font-semibold uppercase ${CONFIDENCE_STYLES[overallConfidence]}`}
+            className={`label ${CONFIDENCE_STYLES[overallConfidence]}`}
+            title={`Model confidence: ${overallConfidence}`}
           >
             {overallConfidence}
           </span>
         </div>
-      </div>
+      </header>
 
-      {/* Absent teammates alert */}
-      {injury_context.absent_teammates.length > 0 && (
-        <div className="flex items-center gap-1.5 mb-3 px-2 py-1 rounded bg-chalk-orange/10 border border-chalk-orange/30">
-          <AlertTriangle size={12} className="text-chalk-orange shrink-0" />
-          <span className="text-xs text-chalk-orange">
-            Usage spike — {injury_context.absent_teammates.join(", ")}{" "}
-            {injury_context.absent_teammates.length === 1 ? "is" : "are"} out
-          </span>
+      {absent.length > 0 && (
+        <div className="flex items-start gap-2 border-b border-hairline bg-caution/5 px-4 py-2.5">
+          <AlertTriangle
+            size={13}
+            className="mt-px shrink-0 text-caution"
+            aria-hidden
+          />
+          <p className="text-[0.75rem] leading-snug text-caution">
+            Usage bump — {absent.join(", ")} {absent.length === 1 ? "is" : "are"} out
+          </p>
         </div>
       )}
 
-      {/* Stat distributions */}
-      <div className="space-y-4 mb-4">
-        {keyPreds.map((p) => (
-          <StatDistribution key={p.stat} prediction={p} />
-        ))}
+      <div className="flex-1 space-y-2.5 px-4 py-4">
+        {keyPreds.length > 0 ? (
+          keyPreds.map((p) => <StatDistribution key={p.stat} prediction={p} />)
+        ) : (
+          <p className="text-[0.8125rem] text-subtle">No stat models ran for this player.</p>
+        )}
       </div>
 
-      {/* Fantasy scores */}
-      <div className="flex gap-3 pt-2 border-t border-navy-600">
-        <FantasyChip label="DK" value={fantasy_scores.draftkings} />
-        <FantasyChip label="FD" value={fantasy_scores.fanduel} />
-        <FantasyChip label="Yahoo" value={fantasy_scores.yahoo} />
-      </div>
-    </div>
+      <footer className="mt-auto flex items-center gap-5 border-t border-hairline px-4 py-2.5">
+        <span className="label text-subtle">Fantasy</span>
+        <div className="flex flex-1 items-center justify-end gap-4">
+          <FantasyChip label="DK" value={fantasy_scores.draftkings} />
+          <FantasyChip label="FD" value={fantasy_scores.fanduel} />
+          <FantasyChip label="YH" value={fantasy_scores.yahoo} />
+        </div>
+      </footer>
+    </article>
   );
 }
 
 function FantasyChip({ label, value }: { label: string; value: number }) {
   return (
-    <div className="text-center">
-      <div className="text-[10px] text-neutral-400 uppercase">{label}</div>
-      <div className="text-sm font-bold text-neutral-200">{value.toFixed(1)}</div>
-    </div>
+    <span className="flex items-baseline gap-1.5">
+      <span className="label text-subtle">{label}</span>
+      <span className="num text-[0.8125rem] font-semibold text-ink">
+        {value.toFixed(1)}
+      </span>
+    </span>
   );
 }
 
 function getOverallConfidence(
-  preds: { confidence: "high" | "medium" | "low" }[]
+  preds: { confidence: "high" | "medium" | "low" }[],
 ): "high" | "medium" | "low" {
   const scores = { high: 3, medium: 2, low: 1 };
   if (preds.length === 0) return "medium";
